@@ -1,0 +1,33 @@
+pipeline {
+    agent {label "docker"}
+ environment {
+        OLD_TAG="1.0"
+        NEW_TAG="1.0"
+        IMG_NAME="markgeorge94/nodejs"
+        
+    }
+    
+    stages {
+        stage('Build') {
+            steps {
+                // Get some code from a GitHub repository
+                git 'https://github.com/mahmoud254/jenkins_nodejs_example.git'
+                 withCredentials([usernamePassword(credentialsId: 'docker', usernameVariable: 'USERNAME', passwordVariable: 'PASS')]) {
+                      sh 'docker login -u $USERNAME -p $PASS'
+                      sh "docker pull ${IMG_NAME}:${NEW_TAG}"
+                      sh "docker run -d -p 3004:3000 ${IMG_NAME}:${NEW_TAG}"
+                      
+                      
+                 }
+            
+            }
+             post {
+                success {
+                    slackSend channel: "testing", message: "Build success"
+
+                }
+            }
+            
+            }
+        }
+    }

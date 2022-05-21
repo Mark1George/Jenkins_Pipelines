@@ -1,0 +1,72 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Build') {
+            steps {
+                      sh 'terraform apply -var-file dev.tfvars --auto-approve'
+            }
+        }
+        
+            stage('Enviroment file') {
+            steps {
+            
+              sh '''
+cat <<EOF > ./.env
+RDS_HOSTNAME=`terraform  output -raw rdsHost`
+RDS_PORT=`terraform output -raw rdsPort `
+REDIS_HOSTNAME=`terraform  output -raw redisHost`
+REDIS_PORT=`terraform  output -raw redisPort`
+    '''
+        }
+        }
+        
+        
+        stage('Ssh key') {
+            steps {
+                  sh 'chmod 777 hamada-key.pem'
+                  sh 'terraform output -raw sshKey > hamada-key.pem'
+                  sh 'chmod 400 hamada-key.pem'
+        }
+        }
+        stage('Config file') {
+            steps {
+            sh '''
+cat <<EOF > /root/.ssh/config
+host bastion
+HostName `terraform  output -raw publicEc2`
+User ubuntu
+identityFile /var/jenkins_home/workspace/terra/hamada-key.pem
+StrictHostKeyChecking=no
+
+host private_instance
+HostName  `terraform  output -raw priveteEc2`
+user  ubuntu
+ProxyCommand ssh bastion -W %h:%p
+identityFile /var/jenkins_home/workspace/terra/hamada-key.pem
+StrictHostKeyChecking=no
+'''
+        }
+        }
+
+        stage('Ansible inventory file') {
+            steps {
+             sh '''
+cat <<EOF > ./inventory
+[host]
+private_instance
+            '''
+        }
+        }
+  
+        stage('config') {
+            steps {
+                      sh 'ansible-playbook playbook.yaml -i inventory --private-key hamada-key.pem '
+                 
+            }
+            }
+
+            }
+        }
+    
+

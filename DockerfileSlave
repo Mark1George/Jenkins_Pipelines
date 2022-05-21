@@ -1,0 +1,16 @@
+FROM ubuntu
+USER root
+RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - \
+    && echo "deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial stable" >> /etc/apt/sources.list.d/additional-repositories.list \
+    && echo "deb http://ftp-stud.hs-esslingen.de/ubuntu xenial main restricted universe multiverse" >> /etc/apt/sources.list.d/official-package-repositories.list \
+    && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 437D05B5 \
+    && apt-get update
+RUN apt-get -y install docker-ce
+
+RUN mkdir -p jenkins
+RUN chmod 777 jenkins
+RUN apt-get update -y
+RUN apt-get install openssh-server -y
+RUN apt-get install openjdk-8-jdk -y
+
+WORKDIR jenkins

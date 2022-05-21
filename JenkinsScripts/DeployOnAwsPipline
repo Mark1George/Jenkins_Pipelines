@@ -1,0 +1,33 @@
+pipeline {
+    agent {label "aws"}
+ environment {
+        NEW_TAG="3.0"
+        IMG_NAME="markgeorge94/nodejs"
+        
+    }
+    
+    stages {
+        stage('Build') {
+            steps {
+                // Get some code from a GitHub repository
+                git branch: 'rds_redis', url: 'https://github.com/Mark1George/jenkins_nodejs_example.git'
+                //   withCredentials([usernamePassword(credentialsId: 'docker', usernameVariable: 'USERNAME', passwordVariable: 'PASS')]) {
+                    //   sh "sudo docker build -f dockerfile -t ${IMG_NAME}:${NEW_TAG} ."
+                      sh "sudo docker run -d -p 3000:3000 --env-file /home/ubuntu/.env --env RDS_USERNAME=$RDS_USERNAME --env RDS_PASSWORD=$RDS_PASSWORD ${IMG_NAME}:${NEW_TAG}"
+                    //   sh 'sudo docker login -u $USERNAME -p $PASS'
+                    //   sh "sudo docker push ${IMG_NAME}:${NEW_TAG}"
+                      
+                      
+                //  }
+            
+            }
+             post {
+                success {
+                    slackSend channel: "testing", message: "Build success"
+
+                }
+            }
+            
+            }
+        }
+    }
