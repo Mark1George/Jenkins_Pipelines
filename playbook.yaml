@@ -14,10 +14,6 @@
       become: true
       command: apt install docker.io -y
 
-    - name: insatall docker dependency
-      become: true
-      command: snap install docker
-
     - name: move to  /home/ubuntu
       command: chdir=/home/ubuntu curl -o agent.jar http://34.133.211.58/jnlpJars/agent.jar
     - name: copy env file to slave
